@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const TypingTest = () => {
-  // List of all countries
+  // List of all countries - exactly 197 countries
   const allCountries = [
     "afghanistan", "albania", "algeria", "andorra", "angola", "antiguabarbuda", "argentina",
     "armenia", "australia", "austria", "azerbaijan", "bahamas", "bahrain", "bangladesh",
@@ -29,8 +29,8 @@ const TypingTest = () => {
     "solomonislands", "somalia", "southafrica", "southsudan", "spain", "srilanka", "sudan", 
     "suriname", "sweden", "switzerland", "syria", "taiwan", "tajikistan", "tanzania", 
     "thailand", "togo", "tonga", "trinidadandtobago", "tunisia", "turkey", "turkmenistan", 
-    "tuvalu", "uganda", "ukraine", "unitedarabemirates", "unitedkingdom", "unitedstates", 
-    "uruguay", "uzbekistan", "vanuatu", "vaticancity", "venezuela", "vietnam", "yemen", 
+    "tuvalu", "uganda", "ukraine", "unitedarabemirates", "unitedkingdom", "usa", 
+    "uruguay", "uzbekistan", "vanuatu", "vatican", "venezuela", "vietnam", "yemen", 
     "zambia", "zimbabwe"
   ];
   
@@ -45,6 +45,12 @@ const TypingTest = () => {
   const [testCompleted, setTestCompleted] = useState(false);
   const [randomizeWords, setRandomizeWords] = useState(true);
   const [testSize, setTestSize] = useState(50); // Default number of countries to test
+  const [savedResults, setSavedResults] = useState(() => {
+    // Try to load saved results from localStorage on initialization
+    const saved = localStorage.getItem('countriesTypingResults');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [autoSave, setAutoSave] = useState(true);
   
   const inputRef = useRef(null);
   
@@ -118,6 +124,34 @@ const TypingTest = () => {
         // Test completed
         setIsRunning(false);
         setTestCompleted(true);
+        
+        // Auto-save results if enabled
+        if (autoSave) {
+          const newResults = [...results, {
+            word: currentWord,
+            timeSpent: timeSpent,
+            index: currentWordIndex,
+            date: new Date().toISOString()
+          }];
+          
+          const historyToSave = [
+            ...savedResults,
+            {
+              date: new Date().toISOString(),
+              testSize: wordList.length,
+              randomized: randomizeWords,
+              results: newResults,
+              totalTime: newResults.reduce((sum, r) => sum + r.timeSpent, 0),
+              averageTime: newResults.reduce((sum, r) => sum + r.timeSpent, 0) / newResults.length
+            }
+          ];
+          
+          // Save to localStorage (keep last 50 tests max)
+          localStorage.setItem('countriesTypingResults', 
+            JSON.stringify(historyToSave.slice(-50)));
+          
+          setSavedResults(historyToSave);
+        }
       }
     }
   };
@@ -193,7 +227,7 @@ const TypingTest = () => {
             <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block mb-2 font-medium">Number of countries to test (max 197):</label>
+                <label className="block mb-2 font-medium">Number of countries to test (1-197):</label>
                 <input 
                   type="number" 
                   min="1" 
@@ -204,17 +238,32 @@ const TypingTest = () => {
                 />
               </div>
               
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="randomize"
-                  checked={randomizeWords}
-                  onChange={() => setRandomizeWords(!randomizeWords)}
-                  className="w-4 h-4 mr-2"
-                />
-                <label htmlFor="randomize" className="text-sm font-medium">
-                  Randomize country order
-                </label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="randomize"
+                    checked={randomizeWords}
+                    onChange={() => setRandomizeWords(!randomizeWords)}
+                    className="w-4 h-4 mr-2"
+                  />
+                  <label htmlFor="randomize" className="text-sm font-medium">
+                    Randomize country order
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="autosave"
+                    checked={autoSave}
+                    onChange={() => setAutoSave(!autoSave)}
+                    className="w-4 h-4 mr-2"
+                  />
+                  <label htmlFor="autosave" className="text-sm font-medium">
+                    Auto-save results locally
+                  </label>
+                </div>
               </div>
               
               <button 
@@ -335,6 +384,55 @@ const TypingTest = () => {
                 Restart Test
               </button>
             </div>
+            
+            {savedResults.length > 0 && (
+              <div className="mt-6 border-t border-gray-300 pt-4">
+                <h3 className="text-xl font-semibold mb-2">Saved Test History ({savedResults.length})</h3>
+                <div className="overflow-x-auto max-h-60 overflow-y-auto">
+                  <table className="min-w-full bg-white">
+                    <thead className="sticky top-0 bg-white">
+                      <tr>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Date</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Countries</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Avg Time</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Total Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {savedResults.slice().reverse().map((test, index) => (
+                        <tr key={index}>
+                          <td className="py-2 px-4 border-b border-gray-200">
+                            {new Date(test.date).toLocaleString()}
+                          </td>
+                          <td className="py-2 px-4 border-b border-gray-200 text-center">
+                            {test.testSize}
+                          </td>
+                          <td className="py-2 px-4 border-b border-gray-200 text-center">
+                            {test.averageTime.toFixed(2)} sec
+                          </td>
+                          <td className="py-2 px-4 border-b border-gray-200 text-center">
+                            {test.totalTime.toFixed(2)} sec
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button 
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear all saved test history?')) {
+                        localStorage.removeItem('countriesTypingResults');
+                        setSavedResults([]);
+                      }
+                    }} 
+                    className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded"
+                  >
+                    Clear History
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
