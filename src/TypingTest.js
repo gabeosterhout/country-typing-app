@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Papa from 'papaparse';
 
 const TypingTest = () => {
   // List of all countries - exactly as in the CSV file (197 countries)
@@ -53,8 +54,44 @@ const TypingTest = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [autoSave, setAutoSave] = useState(true);
+  const [flagUrls, setFlagUrls] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   
   const inputRef = useRef(null);
+  
+  // Load flag URLs from the CSV file on component mount
+  useEffect(() => {
+    const loadFlagUrls = async () => {
+      try {
+        setIsLoading(true);
+        const response = await window.fs.readFile('flag_urls.csv', { encoding: 'utf8' });
+        
+        Papa.parse(response, {
+          header: true,
+          complete: (results) => {
+            const urls = {};
+            // Map country names to flag URLs
+            results.data.forEach(row => {
+              if (row.country && row.flag_link) {
+                urls[row.country] = row.flag_link;
+              }
+            });
+            setFlagUrls(urls);
+            setIsLoading(false);
+          },
+          error: (error) => {
+            console.error("Error parsing CSV:", error);
+            setIsLoading(false);
+          }
+        });
+      } catch (error) {
+        console.error("Error loading flag URLs:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    loadFlagUrls();
+  }, []);
   
   // Fisher-Yates shuffle algorithm
   const shuffleArray = (array) => {
@@ -68,13 +105,8 @@ const TypingTest = () => {
   
   // Prepare and start test
   const prepareTest = () => {
-    // Get all countries or a random subset based on testSize
+    // Get all countries
     let selectedCountries = [...allCountries];
-    
-    if (testSize < selectedCountries.length) {
-      // Shuffle and select the first 'testSize' countries
-      selectedCountries = shuffleArray(selectedCountries).slice(0, testSize);
-    }
     
     // Randomize if option is selected
     if (randomizeWords) {
@@ -205,228 +237,345 @@ const TypingTest = () => {
     document.body.removeChild(a);
   };
   
-  // No test size changing function needed as we use fixed size
+  // Export all saved test history to CSV
+  const exportAllHistoryToCSV = () => {
+    if (savedResults.length === 0) return;
+    
+    // Prepare header row
+    let csvContent = [
+      'test_date,country,time_spent_seconds,test_index,original_index'
+    ];
+    
+    // Add data from each test session
+    savedResults.forEach(test => {
+      const testDate = test.date;
+      
+      // For each country in this test
+      if (test.results && Array.isArray(test.results)) {
+        test.results.forEach(result => {
+          const originalIndex = allCountries.indexOf(result.word);
+          csvContent.push(`${testDate},${result.word},${result.timeSpent},${result.index},${originalIndex}`);
+        });
+      }
+    });
+    
+    // Join all rows and create downloadable file
+    const blob = new Blob([csvContent.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'all_country_typing_tests.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  
+  // Export all saved test history to JSON
+  const exportAllHistoryToJSON = () => {
+    if (savedResults.length === 0) return;
+    
+    // Format the data for export
+    const exportData = savedResults.map(test => ({
+      date: test.date,
+      totalTime: test.totalTime,
+      averageTime: test.averageTime,
+      testSize: test.testSize,
+      randomized: test.randomized,
+      results: test.results ? test.results.map(result => ({
+        country: result.word,
+        timeSpent: result.timeSpent,
+        testIndex: result.index,
+        originalIndex: allCountries.indexOf(result.word)
+      })) : []
+    }));
+    
+    // Create downloadable file
+    const jsonContent = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'all_country_typing_tests.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
   
   // Calculate total time
   const totalTime = results.reduce((sum, result) => sum + result.timeSpent, 0);
   
   // Calculate average time per word
   const averageTime = results.length > 0 ? totalTime / results.length : 0;
+  
+  // Get flag URL for a country
+  const getFlagUrl = (countryName) => {
+    // First check the loaded flag URLs
+    if (flagUrls[countryName]) {
+      return flagUrls[countryName];
+    }
+    
+    // Fallback to placeholder if no flag is available
+    return '/api/placeholder/60/40';
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Country Name Typing Test</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Country Flag Typing Test</h1>
       
-      {!isRunning && !testCompleted && (
-        <div className="mb-6 space-y-4">
-          <div className="border border-gray-300 rounded p-4 mb-4">
-            <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
-            <div className="flex flex-col gap-4">
-              <p className="text-gray-700">This test includes all 197 countries.</p>
+      {isLoading ? (
+        <div className="text-center p-10">
+          <p className="text-lg">Loading flag images...</p>
+          <div className="mt-4 w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      ) : (
+        <>
+          {!isRunning && !testCompleted && (
+            <div className="mb-6 space-y-4">
+              <div className="border border-gray-300 rounded p-4 mb-4">
+                <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
+                <div className="flex flex-col gap-4">
+                  <p className="text-gray-700">This test includes all 197 countries with their flags.</p>
+                  
+                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="randomize"
+                        checked={randomizeWords}
+                        onChange={() => setRandomizeWords(!randomizeWords)}
+                        className="w-4 h-4 mr-2"
+                      />
+                      <label htmlFor="randomize" className="text-sm font-medium">
+                        Randomize country order
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="autosave"
+                        checked={autoSave}
+                        onChange={() => setAutoSave(!autoSave)}
+                        className="w-4 h-4 mr-2"
+                      />
+                      <label htmlFor="autosave" className="text-sm font-medium">
+                        Auto-save results locally
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={prepareTest} 
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
+                  >
+                    Start Typing Test
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {isRunning && (
+            <div className="mb-6 space-y-4">
+              <div className="text-center mb-4">
+                <span className="text-lg font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
+              </div>
               
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="randomize"
-                    checked={randomizeWords}
-                    onChange={() => setRandomizeWords(!randomizeWords)}
-                    className="w-4 h-4 mr-2"
-                  />
-                  <label htmlFor="randomize" className="text-sm font-medium">
-                    Randomize country order
-                  </label>
+              <div className="text-center mb-6">
+                <img 
+                  src={getFlagUrl(wordList[currentWordIndex])} 
+                  alt="Current country flag"
+                  className="mx-auto h-40 object-contain border border-gray-300 rounded shadow-md"
+                />
+              </div>
+              
+              <div>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  className="w-full p-3 text-lg border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
+                  placeholder="Type the country name..."
+                  autoFocus
+                />
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-2">All Countries:</h3>
+                <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50">
+                  {wordList.map((word, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex items-center justify-center p-1 rounded ${
+                        index === currentWordIndex 
+                          ? 'bg-blue-500 p-2' 
+                          : index < currentWordIndex 
+                            ? 'bg-green-100 opacity-50' 
+                            : 'bg-gray-100'
+                      }`}
+                    >
+                      <img 
+                        src={getFlagUrl(word)} 
+                        alt="Country flag"
+                        className="w-full h-8 object-cover border border-gray-300"
+                      />
+                      {index < currentWordIndex && (
+                        <span className="absolute text-green-800 text-lg font-bold">✓</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {testCompleted && (
+            <div className="mb-6 space-y-4">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold text-green-600">Test Completed!</h2>
+              </div>
+              
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
+                <h3 className="text-xl font-semibold mb-2">Results Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="p-3 bg-white rounded shadow">
+                    <p className="text-sm text-gray-600">Countries Typed</p>
+                    <p className="text-3xl font-bold">{results.length}</p>
+                  </div>
+                  <div className="p-3 bg-white rounded shadow">
+                    <p className="text-sm text-gray-600">Total Time</p>
+                    <p className="text-3xl font-bold">{totalTime.toFixed(2)} sec</p>
+                  </div>
+                  <div className="p-3 bg-white rounded shadow">
+                    <p className="text-sm text-gray-600">Avg Time/Country</p>
+                    <p className="text-3xl font-bold">{averageTime.toFixed(2)} sec</p>
+                  </div>
                 </div>
                 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="autosave"
-                    checked={autoSave}
-                    onChange={() => setAutoSave(!autoSave)}
-                    className="w-4 h-4 mr-2"
-                  />
-                  <label htmlFor="autosave" className="text-sm font-medium">
-                    Auto-save results locally
-                  </label>
-                </div>
-              </div>
-              
-              <button 
-                onClick={prepareTest} 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
-              >
-                Start Typing Test
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {isRunning && (
-        <div className="mb-6 space-y-4">
-          <div className="text-center mb-4">
-            <span className="text-lg font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
-          </div>
-          
-          <div className="text-center mb-6">
-            <span className="text-4xl font-bold">{wordList[currentWordIndex]}</span>
-          </div>
-          
-          <div>
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              className="w-full p-3 text-lg border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
-              placeholder="Type the country name..."
-              autoFocus
-            />
-          </div>
-          
-          <div className="mt-6">
-            <h3 className="text-lg font-medium mb-2">All Countries:</h3>
-            <div className="flex flex-wrap gap-2 p-4 border border-gray-200 rounded bg-gray-50">
-              {wordList.map((word, index) => (
-                <span 
-                  key={index} 
-                  className={`px-2 py-1 rounded text-xs ${
-                    index === currentWordIndex 
-                      ? 'bg-blue-500 text-white font-bold' 
-                      : index < currentWordIndex 
-                        ? 'bg-green-100 text-green-800 line-through' 
-                        : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {testCompleted && (
-        <div className="mb-6 space-y-4">
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-green-600">Test Completed!</h2>
-          </div>
-          
-          <div className="p-4 bg-gray-50 rounded border border-gray-200">
-            <h3 className="text-xl font-semibold mb-2">Results Summary</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="p-3 bg-white rounded shadow">
-                <p className="text-sm text-gray-600">Countries Typed</p>
-                <p className="text-3xl font-bold">{results.length}</p>
-              </div>
-              <div className="p-3 bg-white rounded shadow">
-                <p className="text-sm text-gray-600">Total Time</p>
-                <p className="text-3xl font-bold">{totalTime.toFixed(2)} sec</p>
-              </div>
-              <div className="p-3 bg-white rounded shadow">
-                <p className="text-sm text-gray-600">Avg Time/Country</p>
-                <p className="text-3xl font-bold">{averageTime.toFixed(2)} sec</p>
-              </div>
-            </div>
-            
-            <h3 className="text-xl font-semibold mb-2">Top 5 Slowest Countries</h3>
-            <div className="overflow-x-auto mb-4">
-              <table className="min-w-full bg-white">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Country</th>
-                    <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-right">Time (sec)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...results].sort((a, b) => b.timeSpent - a.timeSpent).slice(0, 5).map((result, index) => (
-                    <tr key={index}>
-                      <td className="py-2 px-4 border-b border-gray-200">{result.word}</td>
-                      <td className="py-2 px-4 border-b border-gray-200 text-right">{result.timeSpent.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={exportToCSV} 
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
-              >
-                Export to CSV
-              </button>
-              <button 
-                onClick={exportToJSON} 
-                className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded"
-              >
-                Export to JSON
-              </button>
-              <button 
-                onClick={prepareTest} 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-              >
-                Restart Test
-              </button>
-            </div>
-            
-            {savedResults.length > 0 && (
-              <div className="mt-6 border-t border-gray-300 pt-4">
-                <h3 className="text-xl font-semibold mb-2">Saved Test History ({savedResults.length})</h3>
-                <div className="overflow-x-auto max-h-60 overflow-y-auto">
+                <h3 className="text-xl font-semibold mb-2">Top 5 Slowest Countries</h3>
+                <div className="overflow-x-auto mb-4">
                   <table className="min-w-full bg-white">
-                    <thead className="sticky top-0 bg-white">
+                    <thead>
                       <tr>
-                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Date</th>
-                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Countries</th>
-                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Avg Time</th>
-                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Total Time</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Flag</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Country</th>
+                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-right">Time (sec)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {savedResults.slice().reverse().map((test, index) => (
+                      {[...results].sort((a, b) => b.timeSpent - a.timeSpent).slice(0, 5).map((result, index) => (
                         <tr key={index}>
                           <td className="py-2 px-4 border-b border-gray-200">
-                            {new Date(test.date).toLocaleString()}
+                            <img 
+                              src={getFlagUrl(result.word)} 
+                              alt={result.word}
+                              className="w-12 h-8 object-cover border border-gray-300"
+                            />
                           </td>
-                          <td className="py-2 px-4 border-b border-gray-200 text-center">
-                            {test.testSize}
-                          </td>
-                          <td className="py-2 px-4 border-b border-gray-200 text-center">
-                            {test.averageTime.toFixed(2)} sec
-                          </td>
-                          <td className="py-2 px-4 border-b border-gray-200 text-center">
-                            {test.totalTime.toFixed(2)} sec
-                          </td>
+                          <td className="py-2 px-4 border-b border-gray-200">{result.word}</td>
+                          <td className="py-2 px-4 border-b border-gray-200 text-right">{result.timeSpent.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-2 flex justify-end">
+                
+                <div className="flex flex-wrap gap-3">
                   <button 
-                    onClick={() => {
-                      // Using a custom confirm approach instead of window.confirm
-                      setSavedResults([]);
-                      localStorage.removeItem('countriesTypingResults');
-                    }} 
-                    className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded"
+                    onClick={exportToCSV} 
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
                   >
-                    Clear History
+                    Export to CSV
+                  </button>
+                  <button 
+                    onClick={exportToJSON} 
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded"
+                  >
+                    Export to JSON
+                  </button>
+                  <button 
+                    onClick={prepareTest} 
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                  >
+                    Restart Test
                   </button>
                 </div>
+                
+                {savedResults.length > 0 && (
+                  <div className="mt-6 border-t border-gray-300 pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-xl font-semibold">Saved Test History ({savedResults.length})</h3>
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={exportAllHistoryToCSV}
+                          disabled={savedResults.length === 0}
+                          className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm py-1 px-3 rounded"
+                        >
+                          Export All (CSV)
+                        </button>
+                        <button 
+                          onClick={exportAllHistoryToJSON}
+                          disabled={savedResults.length === 0}
+                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white text-sm py-1 px-3 rounded"
+                        >
+                          Export All (JSON)
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setSavedResults([]);
+                            localStorage.removeItem('countriesTypingResults');
+                          }} 
+                          className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded"
+                        >
+                          Clear History
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto max-h-60 overflow-y-auto">
+                      <table className="min-w-full bg-white">
+                        <thead className="sticky top-0 bg-white">
+                          <tr>
+                            <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Date/Time</th>
+                            <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Countries</th>
+                            <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Avg Time</th>
+                            <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-center">Total Time</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {savedResults.slice().reverse().map((test, index) => (
+                            <tr key={index}>
+                              <td className="py-2 px-4 border-b border-gray-200">
+                                {new Date(test.date).toLocaleString()}
+                              </td>
+                              <td className="py-2 px-4 border-b border-gray-200 text-center">
+                                {test.testSize}
+                              </td>
+                              <td className="py-2 px-4 border-b border-gray-200 text-center">
+                                {test.averageTime.toFixed(2)} sec
+                              </td>
+                              <td className="py-2 px-4 border-b border-gray-200 text-center">
+                                {test.totalTime.toFixed(2)} sec
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      )}
-      
-      {results.length > 0 && !testCompleted && (
-        <div className="p-3 fixed bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200">
-          <p className="text-sm font-medium">Progress: {results.length}/{wordList.length} countries</p>
-          <p className="text-xs text-gray-600">Avg time: {averageTime.toFixed(2)} sec/country</p>
-        </div>
+            </div>
+          )}
+          
+          {results.length > 0 && !testCompleted && (
+            <div className="p-3 fixed bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200">
+              <p className="text-sm font-medium">Progress: {results.length}/{wordList.length} countries</p>
+              <p className="text-xs text-gray-600">Avg time: {averageTime.toFixed(2)} sec/country</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
