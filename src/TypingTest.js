@@ -64,7 +64,16 @@ const TypingTest = () => {
     const loadFlagUrls = async () => {
       try {
         setIsLoading(true);
-        const response = await window.fs.readFile('flag_urls.csv', { encoding: 'utf8' });
+        let response;
+        
+        try {
+          response = await window.fs.readFile('flag_urls.csv', { encoding: 'utf8' });
+        } catch (err) {
+          console.warn("Could not load flag_urls.csv, using empty flag set");
+          setFlagUrls({});
+          setIsLoading(false);
+          return;
+        }
         
         Papa.parse(response, {
           header: true,
@@ -81,11 +90,13 @@ const TypingTest = () => {
           },
           error: (error) => {
             console.error("Error parsing CSV:", error);
+            setFlagUrls({});
             setIsLoading(false);
           }
         });
       } catch (error) {
         console.error("Error loading flag URLs:", error);
+        setFlagUrls({});
         setIsLoading(false);
       }
     };
