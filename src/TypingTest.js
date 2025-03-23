@@ -1,37 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const TypingTest = () => {
-  // List of all countries - exactly 197 countries
+  // List of all countries - exactly as in the CSV file (197 countries)
   const allCountries = [
-    "afghanistan", "albania", "algeria", "andorra", "angola", "antiguabarbuda", "argentina",
-    "armenia", "australia", "austria", "azerbaijan", "bahamas", "bahrain", "bangladesh",
-    "barbados", "belarus", "belgium", "belize", "benin", "bhutan", "bolivia", 
-    "bosniaherzegovina", "botswana", "brazil", "brunei", "bulgaria", "burkinafaso", 
-    "burundi", "cambodia", "cameroon", "canada", "capeverde", "car", "chad", "chile", 
-    "china", "colombia", "comoros", "drc", "repcongo", "costarica", "croatia", "cuba", 
-    "cyprus", "czechia", "denmark", "djibouti", "dominica", "dominicanrepublic", 
-    "easttimor", "ecuador", "egypt", "elsalvador", "equatorialguinea", "eritrea", 
-    "estonia", "eswatini", "ethiopia", "fiji", "finland", "france", "gabon", "gambia", 
-    "georgia", "germany", "ghana", "greece", "grenada", "guatemala", "guinea", 
-    "guineabissau", "guyana", "haiti", "honduras", "hungary", "iceland", "india", 
-    "indonesia", "iran", "iraq", "ireland", "israel", "italy", "jamaica", "japan", 
-    "jordan", "kazakhstan", "kenya", "kiribati", "northkorea", "southkorea", "kosovo", 
-    "kuwait", "kyrgyzstan", "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", 
-    "liechtenstein", "lithuania", "luxembourg", "madagascar", "malawi", "malaysia", 
-    "maldives", "mali", "malta", "marshallislands", "mauritania", "mauritius", "mexico", 
-    "micronesia", "moldova", "monaco", "mongolia", "montenegro", "morocco", "mozambique", 
-    "myanmar", "namibia", "nauru", "nepal", "netherlands", "newzealand", "nicaragua", 
-    "niger", "nigeria", "northmacedonia", "norway", "oman", "pakistan", "palau", 
-    "palestine", "panama", "papuanewguinea", "paraguay", "peru", "philippines", "poland", 
-    "portugal", "qatar", "romania", "russia", "rwanda", "saintkittsandnevis", "saintlucia", 
-    "saintvincentandgrenadines", "samoa", "sanmarino", "saotomeandprincipe", "saudiarabia", 
-    "senegal", "serbia", "seychelles", "sierraleone", "singapore", "slovakia", "slovenia", 
-    "solomonislands", "somalia", "southafrica", "southsudan", "spain", "srilanka", "sudan", 
-    "suriname", "sweden", "switzerland", "syria", "taiwan", "tajikistan", "tanzania", 
-    "thailand", "togo", "tonga", "trinidadandtobago", "tunisia", "turkey", "turkmenistan", 
-    "tuvalu", "uganda", "ukraine", "unitedarabemirates", "unitedkingdom", "usa", 
-    "uruguay", "uzbekistan", "vanuatu", "vatican", "venezuela", "vietnam", "yemen", 
-    "zambia", "zimbabwe"
+    "afghanistan", "albania", "algeria", "andorra", "angola", "antiguabarbuda", 
+    "argentina", "armenia", "australia", "austria", "azerbaijan", "bahamas", 
+    "bahrain", "bangladesh", "barbados", "belarus", "belgium", "belize", 
+    "benin", "bhutan", "bolivia", "bosniaherzegovina", "botswana", "brazil", 
+    "brunei", "bulgaria", "burkinafaso", "burundi", "cambodia", "cameroon", 
+    "canada", "capeverde", "car", "chad", "chile", "china", "colombia", 
+    "comoros", "drc", "repcongo", "costarica", "croatia", "cuba", "cyprus", 
+    "czechia", "denmark", "djibouti", "dominica", "dominicanrepublic", 
+    "easttimor", "ecuador", "egypt", "elsalvador", "equatorialguinea", 
+    "eritrea", "estonia", "ethiopia", "fiji", "finland", "france", "gabon", 
+    "gambia", "georgia", "germany", "ghana", "greece", "grenada", "guatemala", 
+    "guinea", "guineabissau", "guyana", "haiti", "honduras", "hungary", 
+    "iceland", "india", "indonesia", "iran", "iraq", "ireland", "israel", 
+    "italy", "ivorycoast", "jamaica", "japan", "jordan", "kazakhstan", "kenya", 
+    "kiribati", "northkorea", "southkorea", "kosovo", "kuwait", "kyrgyzstan", 
+    "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", "liechtenstein", 
+    "lithuania", "luxembourg", "macedonia", "madagascar", "malawi", "malaysia", 
+    "maldives", "mali", "malta", "marshallislands", "mauritania", "mauritius", 
+    "mexico", "micronesia", "moldova", "monaco", "mongolia", "montenegro", 
+    "morocco", "mozambique", "myanmar", "namibia", "nauru", "nepal", "netherlands", 
+    "newzealand", "nicaragua", "niger", "nigeria", "norway", "oman", "pakistan", 
+    "palau", "palestine", "panama", "papuanewguinea", "paraguay", "peru", 
+    "philippines", "poland", "portugal", "qatar", "romania", "russia", "rwanda", 
+    "stkittsnevis", "stlucia", "saintvincent", "samoa", "sanmarino", "saotomeprincipe", 
+    "saudiarabia", "senegal", "serbia", "seychelles", "sierraleone", "singapore", 
+    "slovakia", "slovenia", "solomonislands", "somalia", "southafrica", "spain", 
+    "srilanka", "southsudan", "sudan", "suriname", "swaziland", "sweden", 
+    "switzerland", "syria", "taiwan", "tajikistan", "tanzania", "thailand", 
+    "togo", "tonga", "trinidadtobago", "tunisia", "turkey", "turkmenistan", 
+    "tuvalu", "uganda", "ukraine", "uae", "uk", "usa", "uruguay", "uzbekistan", 
+    "vanuatu", "vatican", "venezuela", "vietnam", "yemen", "zambia", "zimbabwe"
   ];
   
   // States for the application
@@ -285,11 +287,11 @@ const TypingTest = () => {
           
           <div className="mt-6">
             <h3 className="text-lg font-medium mb-2">All Countries:</h3>
-            <div className="flex flex-wrap gap-2 p-4 border border-gray-200 rounded bg-gray-50 max-h-40 overflow-y-auto">
+            <div className="flex flex-wrap gap-2 p-4 border border-gray-200 rounded bg-gray-50">
               {wordList.map((word, index) => (
                 <span 
                   key={index} 
-                  className={`px-2 py-1 rounded text-sm ${
+                  className={`px-2 py-1 rounded text-xs ${
                     index === currentWordIndex 
                       ? 'bg-blue-500 text-white font-bold' 
                       : index < currentWordIndex 
