@@ -1,9 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const TypingTest = () => {
+  // List of all countries
+  const allCountries = [
+    "afghanistan", "albania", "algeria", "andorra", "angola", "antiguabarbuda", "argentina",
+    "armenia", "australia", "austria", "azerbaijan", "bahamas", "bahrain", "bangladesh",
+    "barbados", "belarus", "belgium", "belize", "benin", "bhutan", "bolivia", 
+    "bosniaherzegovina", "botswana", "brazil", "brunei", "bulgaria", "burkinafaso", 
+    "burundi", "cambodia", "cameroon", "canada", "capeverde", "car", "chad", "chile", 
+    "china", "colombia", "comoros", "drc", "repcongo", "costarica", "croatia", "cuba", 
+    "cyprus", "czechia", "denmark", "djibouti", "dominica", "dominicanrepublic", 
+    "easttimor", "ecuador", "egypt", "elsalvador", "equatorialguinea", "eritrea", 
+    "estonia", "eswatini", "ethiopia", "fiji", "finland", "france", "gabon", "gambia", 
+    "georgia", "germany", "ghana", "greece", "grenada", "guatemala", "guinea", 
+    "guineabissau", "guyana", "haiti", "honduras", "hungary", "iceland", "india", 
+    "indonesia", "iran", "iraq", "ireland", "israel", "italy", "jamaica", "japan", 
+    "jordan", "kazakhstan", "kenya", "kiribati", "northkorea", "southkorea", "kosovo", 
+    "kuwait", "kyrgyzstan", "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", 
+    "liechtenstein", "lithuania", "luxembourg", "madagascar", "malawi", "malaysia", 
+    "maldives", "mali", "malta", "marshallislands", "mauritania", "mauritius", "mexico", 
+    "micronesia", "moldova", "monaco", "mongolia", "montenegro", "morocco", "mozambique", 
+    "myanmar", "namibia", "nauru", "nepal", "netherlands", "newzealand", "nicaragua", 
+    "niger", "nigeria", "northmacedonia", "norway", "oman", "pakistan", "palau", 
+    "palestine", "panama", "papuanewguinea", "paraguay", "peru", "philippines", "poland", 
+    "portugal", "qatar", "romania", "russia", "rwanda", "saintkittsandnevis", "saintlucia", 
+    "saintvincentandgrenadines", "samoa", "sanmarino", "saotomeandprincipe", "saudiarabia", 
+    "senegal", "serbia", "seychelles", "sierraleone", "singapore", "slovakia", "slovenia", 
+    "solomonislands", "somalia", "southafrica", "southsudan", "spain", "srilanka", "sudan", 
+    "suriname", "sweden", "switzerland", "syria", "taiwan", "tajikistan", "tanzania", 
+    "thailand", "togo", "tonga", "trinidadandtobago", "tunisia", "turkey", "turkmenistan", 
+    "tuvalu", "uganda", "ukraine", "unitedarabemirates", "unitedkingdom", "unitedstates", 
+    "uruguay", "uzbekistan", "vanuatu", "vaticancity", "venezuela", "vietnam", "yemen", 
+    "zambia", "zimbabwe"
+  ];
+  
   // States for the application
   const [wordList, setWordList] = useState([]);
-  const [originalWordList, setOriginalWordList] = useState([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isRunning, setIsRunning] = useState(false);
@@ -11,23 +43,36 @@ const TypingTest = () => {
   const [startTime, setStartTime] = useState(null);
   const [wordStartTime, setWordStartTime] = useState(null);
   const [testCompleted, setTestCompleted] = useState(false);
-  const [fileContent, setFileContent] = useState('');
   const [randomizeWords, setRandomizeWords] = useState(true);
+  const [testSize, setTestSize] = useState(50); // Default number of countries to test
   
   const inputRef = useRef(null);
   
-  // Start the test
-  const startTest = () => {
-    if (originalWordList.length === 0) {
-      alert('Please upload a word list or use the sample list');
-      return;
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+  
+  // Prepare and start test
+  const prepareTest = () => {
+    // Get all countries or a random subset based on testSize
+    let selectedCountries = [...allCountries];
+    
+    if (testSize < selectedCountries.length) {
+      // Shuffle and select the first 'testSize' countries
+      selectedCountries = shuffleArray(selectedCountries).slice(0, testSize);
     }
     
-    // Randomize the word list if the option is selected
+    // Randomize if option is selected
     if (randomizeWords) {
-      setWordList(shuffleArray(originalWordList));
+      setWordList(shuffleArray(selectedCountries));
     } else {
-      setWordList([...originalWordList]);
+      setWordList(selectedCountries);
     }
     
     setCurrentWordIndex(0);
@@ -43,50 +88,6 @@ const TypingTest = () => {
     }
   };
   
-  // Fisher-Yates shuffle algorithm
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-  
-  // Handle file upload
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    
-    if (file) {
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        const content = event.target.result;
-        setFileContent(content);
-        
-        // Parse the file content (assuming one word per line)
-        const words = content.split(/[\n,\s]+/).filter(word => word.trim() !== '');
-        setOriginalWordList(words);
-        setWordList(randomizeWords ? shuffleArray(words) : words);
-      };
-      
-      reader.readAsText(file);
-    }
-  };
-  
-  // Use sample word list
-  const useSampleList = () => {
-    const sampleWords = [
-      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I',
-      'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
-      'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
-      'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what'
-    ];
-    setOriginalWordList(sampleWords);
-    setWordList(randomizeWords ? shuffleArray(sampleWords) : sampleWords);
-    setFileContent(sampleWords.join('\n'));
-  };
-  
   // Handle input change
   const handleInputChange = (e) => {
     if (!isRunning) return;
@@ -94,10 +95,10 @@ const TypingTest = () => {
     setInputValue(e.target.value);
     
     const currentWord = wordList[currentWordIndex];
-    const typedWord = e.target.value.trim();
+    const typedWord = e.target.value.trim().toLowerCase();
     
     // If the current word is completed correctly
-    if (typedWord === currentWord) {
+    if (typedWord === currentWord.toLowerCase()) {
       // Record the time spent on this word
       const now = Date.now();
       const timeSpent = (now - wordStartTime) / 1000; // in seconds
@@ -125,11 +126,10 @@ const TypingTest = () => {
   const exportToCSV = () => {
     if (results.length === 0) return;
     
-    // Include original word index to track the original position when randomized
     const csvContent = [
-      'word,time_spent_seconds,word_index,original_order',
+      'country,time_spent_seconds,test_index,original_index',
       ...results.map(result => {
-        const originalIndex = originalWordList.indexOf(result.word);
+        const originalIndex = allCountries.indexOf(result.word);
         return `${result.word},${result.timeSpent},${result.index},${originalIndex}`;
       })
     ].join('\n');
@@ -138,7 +138,7 @@ const TypingTest = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'typing_test_results.csv';
+    a.download = 'country_typing_test_results.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -148,15 +148,33 @@ const TypingTest = () => {
   const exportToJSON = () => {
     if (results.length === 0) return;
     
-    const jsonContent = JSON.stringify(results, null, 2);
+    const jsonData = results.map(result => {
+      const originalIndex = allCountries.indexOf(result.word);
+      return {
+        country: result.word,
+        timeSpent: result.timeSpent,
+        testIndex: result.index,
+        originalIndex
+      };
+    });
+    
+    const jsonContent = JSON.stringify(jsonData, null, 2);
     const blob = new Blob([jsonContent], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'typing_test_results.json';
+    a.download = 'country_typing_test_results.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+  
+  // Handle test size change
+  const handleTestSizeChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value > 0 && value <= allCountries.length) {
+      setTestSize(value);
+    }
   };
   
   // Calculate total time
@@ -167,35 +185,26 @@ const TypingTest = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Custom Word Typing Test</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Country Name Typing Test</h1>
       
       {!isRunning && !testCompleted && (
         <div className="mb-6 space-y-4">
           <div className="border border-gray-300 rounded p-4 mb-4">
-            <h2 className="text-xl font-semibold mb-2">1. Prepare Your Word List</h2>
+            <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block mb-2 font-medium">Upload a file with your words (one per line or comma-separated):</label>
+                <label className="block mb-2 font-medium">Number of countries to test (max 197):</label>
                 <input 
-                  type="file" 
-                  accept=".txt,.csv" 
-                  onChange={handleFileUpload} 
-                  className="border border-gray-300 rounded p-2 w-full"
+                  type="number" 
+                  min="1" 
+                  max={allCountries.length}
+                  value={testSize}
+                  onChange={handleTestSizeChange}
+                  className="border border-gray-300 rounded p-2 w-full md:w-32"
                 />
               </div>
-              <div className="flex items-center">
-                <div className="border-t border-gray-300 flex-grow mr-3"></div>
-                <div className="text-gray-500">OR</div>
-                <div className="border-t border-gray-300 flex-grow ml-3"></div>
-              </div>
-              <button 
-                onClick={useSampleList} 
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded"
-              >
-                Use Sample Word List (40 common words)
-              </button>
               
-              <div className="mt-4 flex items-center">
+              <div className="flex items-center">
                 <input
                   type="checkbox"
                   id="randomize"
@@ -204,33 +213,25 @@ const TypingTest = () => {
                   className="w-4 h-4 mr-2"
                 />
                 <label htmlFor="randomize" className="text-sm font-medium">
-                  Randomize word order
+                  Randomize country order
                 </label>
               </div>
-            </div>
-          </div>
-          
-          {wordList.length > 0 && (
-            <div className="border border-gray-300 rounded p-4">
-              <h2 className="text-xl font-semibold mb-2">2. Your Word List ({wordList.length} words)</h2>
-              <div className="max-h-40 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50">
-                <p className="text-sm font-mono whitespace-pre-wrap">{fileContent || wordList.join(', ')}</p>
-              </div>
+              
               <button 
-                onClick={startTest} 
-                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded"
+                onClick={prepareTest} 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
               >
                 Start Typing Test
               </button>
             </div>
-          )}
+          </div>
         </div>
       )}
       
       {isRunning && (
         <div className="mb-6 space-y-4">
           <div className="text-center mb-4">
-            <span className="text-lg font-medium">Word {currentWordIndex + 1} of {wordList.length}</span>
+            <span className="text-lg font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
           </div>
           
           <div className="text-center mb-6">
@@ -244,13 +245,13 @@ const TypingTest = () => {
               value={inputValue}
               onChange={handleInputChange}
               className="w-full p-3 text-lg border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
-              placeholder="Type the word above and press space..."
+              placeholder="Type the country name..."
               autoFocus
             />
           </div>
           
           <div className="mt-6">
-            <h3 className="text-lg font-medium mb-2">All Words:</h3>
+            <h3 className="text-lg font-medium mb-2">All Countries:</h3>
             <div className="flex flex-wrap gap-2 p-4 border border-gray-200 rounded bg-gray-50 max-h-40 overflow-y-auto">
               {wordList.map((word, index) => (
                 <span 
@@ -281,7 +282,7 @@ const TypingTest = () => {
             <h3 className="text-xl font-semibold mb-2">Results Summary</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="p-3 bg-white rounded shadow">
-                <p className="text-sm text-gray-600">Words Typed</p>
+                <p className="text-sm text-gray-600">Countries Typed</p>
                 <p className="text-3xl font-bold">{results.length}</p>
               </div>
               <div className="p-3 bg-white rounded shadow">
@@ -289,17 +290,17 @@ const TypingTest = () => {
                 <p className="text-3xl font-bold">{totalTime.toFixed(2)} sec</p>
               </div>
               <div className="p-3 bg-white rounded shadow">
-                <p className="text-sm text-gray-600">Avg Time/Word</p>
+                <p className="text-sm text-gray-600">Avg Time/Country</p>
                 <p className="text-3xl font-bold">{averageTime.toFixed(2)} sec</p>
               </div>
             </div>
             
-            <h3 className="text-xl font-semibold mb-2">Top 5 Slowest Words</h3>
+            <h3 className="text-xl font-semibold mb-2">Top 5 Slowest Countries</h3>
             <div className="overflow-x-auto mb-4">
               <table className="min-w-full bg-white">
                 <thead>
                   <tr>
-                    <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Word</th>
+                    <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left">Country</th>
                     <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-right">Time (sec)</th>
                   </tr>
                 </thead>
@@ -328,7 +329,7 @@ const TypingTest = () => {
                 Export to JSON
               </button>
               <button 
-                onClick={startTest} 
+                onClick={prepareTest} 
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
               >
                 Restart Test
@@ -340,8 +341,8 @@ const TypingTest = () => {
       
       {results.length > 0 && !testCompleted && (
         <div className="p-3 fixed bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200">
-          <p className="text-sm font-medium">Progress: {results.length}/{wordList.length} words</p>
-          <p className="text-xs text-gray-600">Avg time: {averageTime.toFixed(2)} sec/word</p>
+          <p className="text-sm font-medium">Progress: {results.length}/{wordList.length} countries</p>
+          <p className="text-xs text-gray-600">Avg time: {averageTime.toFixed(2)} sec/country</p>
         </div>
       )}
     </div>
