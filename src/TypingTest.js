@@ -44,7 +44,7 @@ const TypingTest = () => {
   const [wordStartTime, setWordStartTime] = useState(null);
   const [testCompleted, setTestCompleted] = useState(false);
   const [randomizeWords, setRandomizeWords] = useState(true);
-  const [testSize, setTestSize] = useState(50); // Default number of countries to test
+  const testSize = 197; // Fixed to all countries
   const [savedResults, setSavedResults] = useState(() => {
     // Try to load saved results from localStorage on initialization
     const saved = localStorage.getItem('countriesTypingResults');
@@ -203,13 +203,7 @@ const TypingTest = () => {
     document.body.removeChild(a);
   };
   
-  // Handle test size change
-  const handleTestSizeChange = (e) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value > 0 && value <= allCountries.length) {
-      setTestSize(value);
-    }
-  };
+  // No test size changing function needed as we use fixed size
   
   // Calculate total time
   const totalTime = results.reduce((sum, result) => sum + result.timeSpent, 0);
@@ -226,17 +220,7 @@ const TypingTest = () => {
           <div className="border border-gray-300 rounded p-4 mb-4">
             <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
             <div className="flex flex-col gap-4">
-              <div>
-                <label className="block mb-2 font-medium">Number of countries to test (1-197):</label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max={allCountries.length}
-                  value={testSize}
-                  onChange={handleTestSizeChange}
-                  className="border border-gray-300 rounded p-2 w-full md:w-32"
-                />
-              </div>
+              <p className="text-gray-700">This test includes all 197 countries.</p>
               
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <div className="flex items-center">
@@ -421,10 +405,9 @@ const TypingTest = () => {
                 <div className="mt-2 flex justify-end">
                   <button 
                     onClick={() => {
-                      if (confirm('Are you sure you want to clear all saved test history?')) {
-                        localStorage.removeItem('countriesTypingResults');
-                        setSavedResults([]);
-                      }
+                      // Using a custom confirm approach instead of window.confirm
+                      setSavedResults([]);
+                      localStorage.removeItem('countriesTypingResults');
                     }} 
                     className="bg-red-600 hover:bg-red-700 text-white text-sm py-1 px-3 rounded"
                   >
