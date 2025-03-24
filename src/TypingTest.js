@@ -27,7 +27,7 @@ const TypingTest = () => {
     "newzealand", "nicaragua", "niger", "nigeria", "norway", "oman", "pakistan", 
     "palau", "palestine", "panama", "papuanewguinea", "paraguay", "peru", 
     "philippines", "poland", "portugal", "qatar", "romania", "russia", "rwanda", 
-    "stkittsnevis", "stlucia", "saintvincent", "samoa", "sanmarino", "saotomeprincipe", 
+    "stkittsnevis", "stlucia", "stvincent", "samoa", "sanmarino", "saotomeprincipe", 
     "saudiarabia", "senegal", "serbia", "seychelles", "sierraleone", "singapore", 
     "slovakia", "slovenia", "solomonislands", "somalia", "southafrica", "spain", 
     "srilanka", "southsudan", "sudan", "suriname", "swaziland", "sweden", 
