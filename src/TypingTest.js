@@ -154,6 +154,9 @@ const TypingTest = () => {
     
     // If the current word is completed correctly
     if (typedWord === currentWord.toLowerCase()) {
+      // Save current scroll position
+      const scrollPosition = window.pageYOffset;
+      
       // Record the time spent on this word
       const now = Date.now();
       const timeSpent = (now - wordStartTime) / 1000; // in seconds
@@ -169,6 +172,11 @@ const TypingTest = () => {
         setCurrentWordIndex(currentWordIndex + 1);
         setInputValue('');
         setWordStartTime(now);
+        
+        // Restore scroll position after state update
+        setTimeout(() => {
+          window.scrollTo(0, scrollPosition);
+        }, 0);
       } else {
         // Test completed
         setIsRunning(false);
@@ -418,7 +426,7 @@ const TypingTest = () => {
               
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">All Countries:</h3>
-                <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50">
+                <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 pb-20">
                   {wordList.map((word, index) => (
                     <div 
                       key={index} 
@@ -430,6 +438,7 @@ const TypingTest = () => {
                             : 'bg-gray-100'
                       }`}
                       style={{ minHeight: '42px' }}
+                      id={index === currentWordIndex ? "current-flag" : ""}
                     >
                       <img 
                         src={getFlagUrl(word)} 
