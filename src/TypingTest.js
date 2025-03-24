@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+// Fisher-Yates shuffle algorithm
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 
 const TypingTest = () => {
@@ -108,15 +116,23 @@ const TypingTest = () => {
     loadFlagUrls();
   }, []);
   
-  // Fisher-Yates shuffle algorithm
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  // Scrolling reference
+  const flagsContainerRef = useRef(null);
+  
+  // Function to maintain scroll position after state updates
+  const maintainScroll = useCallback(() => {
+    if (flagsContainerRef.current) {
+      const container = flagsContainerRef.current;
+      const scrollPosition = container.scrollTop;
+      
+      // Restore scroll position after React has updated the DOM
+      setTimeout(() => {
+        if (container) {
+          container.scrollTop = scrollPosition;
+        }
+      }, 0);
     }
-    return shuffled;
-  };
+  }, []);
   
   // Prepare and start test
   const prepareTest = () => {
@@ -154,8 +170,8 @@ const TypingTest = () => {
     
     // If the current word is completed correctly
     if (typedWord === currentWord.toLowerCase()) {
-      // Save current scroll position
-      const scrollPosition = window.pageYOffset;
+      // Save scroll position before state update
+      maintainScroll();
       
       // Record the time spent on this word
       const now = Date.now();
@@ -172,11 +188,6 @@ const TypingTest = () => {
         setCurrentWordIndex(currentWordIndex + 1);
         setInputValue('');
         setWordStartTime(now);
-        
-        // Restore scroll position after state update
-        setTimeout(() => {
-          window.scrollTo(0, scrollPosition);
-        }, 0);
       } else {
         // Test completed
         setIsRunning(false);
@@ -426,7 +437,10 @@ const TypingTest = () => {
               
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">All Countries:</h3>
-                <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 pb-20">
+                <div
+                  ref={flagsContainerRef}
+                  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-96 overflow-y-auto pb-20"
+                >
                   {wordList.map((word, index) => (
                     <div 
                       key={index} 
