@@ -1,12 +1,4 @@
-// Fisher-Yates shuffle algorithm
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 
 const TypingTest = () => {
@@ -66,6 +58,22 @@ const TypingTest = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   const inputRef = useRef(null);
+  const flagsContainerRef = useRef(null);
+  
+  // Function to maintain scroll position after state updates
+  const maintainScroll = useCallback(() => {
+    if (flagsContainerRef.current) {
+      const container = flagsContainerRef.current;
+      const scrollPosition = container.scrollTop;
+      
+      // Restore scroll position after React has updated the DOM
+      setTimeout(() => {
+        if (container) {
+          container.scrollTop = scrollPosition;
+        }
+      }, 0);
+    }
+  }, []);
   
   // Load flag URLs from the CSV file on component mount
   useEffect(() => {
@@ -116,23 +124,15 @@ const TypingTest = () => {
     loadFlagUrls();
   }, []);
   
-  // Scrolling reference
-  const flagsContainerRef = useRef(null);
-  
-  // Function to maintain scroll position after state updates
-  const maintainScroll = useCallback(() => {
-    if (flagsContainerRef.current) {
-      const container = flagsContainerRef.current;
-      const scrollPosition = container.scrollTop;
-      
-      // Restore scroll position after React has updated the DOM
-      setTimeout(() => {
-        if (container) {
-          container.scrollTop = scrollPosition;
-        }
-      }, 0);
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-  }, []);
+    return shuffled;
+  };
   
   // Prepare and start test
   const prepareTest = () => {
