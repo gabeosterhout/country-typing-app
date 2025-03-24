@@ -422,18 +422,20 @@ const TypingTest = () => {
                   {wordList.map((word, index) => (
                     <div 
                       key={index} 
-                      className={`flex items-center justify-center p-1 rounded ${
+                      className={`flex items-center justify-center p-1 rounded relative ${
                         index === currentWordIndex 
-                          ? 'bg-blue-500 p-2' 
+                          ? 'bg-blue-500 p-2 ring-2 ring-blue-700' 
                           : index < currentWordIndex 
                             ? 'bg-green-100 opacity-50' 
                             : 'bg-gray-100'
                       }`}
+                      style={{ minHeight: '42px' }}
                     >
                       <img 
                         src={getFlagUrl(word)} 
                         alt="Country flag"
-                        className="w-full h-8 object-cover border border-gray-300"
+                        className="w-full object-contain border border-gray-300"
+                        style={{ maxHeight: '32px' }}
                       />
                       {index < currentWordIndex && (
                         <span className="absolute text-green-800 text-lg font-bold">✓</span>
