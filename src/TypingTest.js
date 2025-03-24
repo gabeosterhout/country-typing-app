@@ -67,7 +67,13 @@ const TypingTest = () => {
         let response;
         
         try {
-          response = await window.fs.readFile('flag_urls.csv', { encoding: 'utf8' });
+          // Look for the file in the public folder (root URL)
+          response = await fetch('/flag_urls.csv');
+          if (!response.ok) {
+            throw new Error(`Failed to fetch flag URLs: ${response.status}`);
+          }
+          const text = await response.text();
+          parseCSV(text);
         } catch (err) {
           console.warn("Could not load flag_urls.csv, using empty flag set");
           setFlagUrls({});
@@ -95,7 +101,7 @@ const TypingTest = () => {
           }
         });
       } catch (error) {
-        console.error("Error loading flag URLs:", error);
+        console.error("Error in flag URL loading process:", error);
         setFlagUrls({});
         setIsLoading(false);
       }
