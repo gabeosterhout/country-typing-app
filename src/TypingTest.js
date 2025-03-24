@@ -64,42 +64,40 @@ const TypingTest = () => {
     const loadFlagUrls = async () => {
       try {
         setIsLoading(true);
-        let response;
         
         try {
           // Look for the file in the public folder (root URL)
-          response = await fetch('/flag_urls.csv');
+          const response = await fetch('/flag_urls.csv');
           if (!response.ok) {
             throw new Error(`Failed to fetch flag URLs: ${response.status}`);
           }
           const text = await response.text();
-          parseCSV(text);
+          
+          Papa.parse(text, {
+            header: true,
+            complete: (results) => {
+              const urls = {};
+              // Map country names to flag URLs
+              results.data.forEach(row => {
+                if (row.country && row.flag_link) {
+                  urls[row.country] = row.flag_link;
+                }
+              });
+              console.log(`Loaded ${Object.keys(urls).length} flag URLs`);
+              setFlagUrls(urls);
+              setIsLoading(false);
+            },
+            error: (error) => {
+              console.error("Error parsing CSV:", error);
+              setFlagUrls({});
+              setIsLoading(false);
+            }
+          });
         } catch (err) {
-          console.warn("Could not load flag_urls.csv, using empty flag set");
+          console.warn("Could not load flag_urls.csv, using empty flag set:", err);
           setFlagUrls({});
           setIsLoading(false);
-          return;
         }
-        
-        Papa.parse(response, {
-          header: true,
-          complete: (results) => {
-            const urls = {};
-            // Map country names to flag URLs
-            results.data.forEach(row => {
-              if (row.country && row.flag_link) {
-                urls[row.country] = row.flag_link;
-              }
-            });
-            setFlagUrls(urls);
-            setIsLoading(false);
-          },
-          error: (error) => {
-            console.error("Error parsing CSV:", error);
-            setFlagUrls({});
-            setIsLoading(false);
-          }
-        });
       } catch (error) {
         console.error("Error in flag URL loading process:", error);
         setFlagUrls({});
