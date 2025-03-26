@@ -514,6 +514,7 @@ const TypingTest = () => {
                 <div 
                   ref={flagsContainerRef}
                   className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] w-full overflow-y-auto pb-20"
+                  style={{ gridTemplateRows: 'repeat(auto-fill, minmax(60px, 1fr))' }}
                 >
                   {wordList.map((word, index) => (
                     <div 
