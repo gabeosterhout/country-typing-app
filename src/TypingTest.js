@@ -171,15 +171,8 @@ const TypingTest = () => {
   
   // Prepare and start test
   const prepareTest = () => {
-    // Get all countries
-    let selectedCountries = [...allCountries];
-    
-    // Randomize if option is selected
-    if (randomizeWords) {
-      setWordList(shuffleArray(selectedCountries));
-    } else {
-      setWordList(selectedCountries);
-    }
+    // Reuse the already prepared wordList rather than creating a new one
+    // This maintains the same order between preview and actual test
     
     setCurrentWordIndex(0);
     setInputValue('');
@@ -449,10 +442,9 @@ const TypingTest = () => {
                       // Prepare the word list but don't start the test yet
                       let selectedCountries = [...allCountries];
                       if (randomizeWords) {
-                        setWordList(shuffleArray(selectedCountries));
-                      } else {
-                        setWordList(selectedCountries);
+                        selectedCountries = shuffleArray(selectedCountries);
                       }
+                      setWordList(selectedCountries);
                     }} 
                     className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
                   >
