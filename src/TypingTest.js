@@ -55,7 +55,7 @@ const TypingTest = () => {
     "newzealand", "nicaragua", "niger", "nigeria", "norway", "oman", "pakistan", 
     "palau", "palestine", "panama", "papuanewguinea", "paraguay", "peru", 
     "philippines", "poland", "portugal", "qatar", "romania", "russia", "rwanda", 
-    "stkittsnevis", "stlucia", "stvincent", "samoa", "sanmarino", "saotomeprincipe", 
+    "stkittsnevis", "stlucia", "saintvincent", "samoa", "sanmarino", "saotomeprincipe", 
     "saudiarabia", "senegal", "serbia", "seychelles", "sierraleone", "singapore", 
     "slovakia", "slovenia", "solomonislands", "somalia", "southafrica", "spain", 
     "srilanka", "southsudan", "sudan", "suriname", "swaziland", "sweden", 
@@ -86,7 +86,6 @@ const TypingTest = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   const inputRef = useRef(null);
-  const flagsContainerRef = useRef(null);
   
   // Function to maintain scroll position after state updates
   const maintainScroll = useCallback(() => {
@@ -186,13 +185,8 @@ const TypingTest = () => {
       inputRef.current.focus();
     }
     
-    // Scroll to the current flag in the grid, if possible
-    setTimeout(() => {
-      const currentFlag = document.getElementById("current-flag");
-      if (currentFlag && flagsContainerRef.current) {
-        currentFlag.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }
-    }, 100);
+    // Scroll to the current flag
+    setTimeout(scrollToCurrentFlag, 100);
   };
   
   // Handle input change
@@ -206,9 +200,6 @@ const TypingTest = () => {
     
     // If the current word is completed correctly
     if (typedWord === currentWord.toLowerCase()) {
-      // Save scroll position before state update
-      maintainScroll();
-      
       // Record the time spent on this word
       const now = Date.now();
       const timeSpent = (now - wordStartTime) / 1000; // in seconds
@@ -224,6 +215,9 @@ const TypingTest = () => {
         setCurrentWordIndex(currentWordIndex + 1);
         setInputValue('');
         setWordStartTime(now);
+        
+        // Scroll to the new current flag
+        setTimeout(scrollToCurrentFlag, 0);
       } else {
         // Test completed
         setIsRunning(false);
@@ -465,7 +459,7 @@ const TypingTest = () => {
                     </button>
                   </div>
                   
-                  <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] overflow-y-auto">
+                  <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50">
                     {wordList.map((word, index) => (
                       <div 
                         key={index} 
@@ -512,8 +506,7 @@ const TypingTest = () => {
                 </div>
                 
                 <div 
-                  ref={flagsContainerRef}
-                  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] w-full overflow-y-auto pb-20"
+                  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 w-full"
                   style={{ gridTemplateRows: 'repeat(auto-fill, minmax(60px, 1fr))' }}
                 >
                   {wordList.map((word, index) => (
