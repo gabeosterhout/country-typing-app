@@ -445,13 +445,52 @@ const TypingTest = () => {
                   </div>
                   
                   <button 
-                    onClick={prepareTest} 
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
+                    onClick={() => {
+                      // Prepare the word list but don't start the test yet
+                      let selectedCountries = [...allCountries];
+                      if (randomizeWords) {
+                        setWordList(shuffleArray(selectedCountries));
+                      } else {
+                        setWordList(selectedCountries);
+                      }
+                    }} 
+                    className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded w-full md:w-auto"
                   >
-                    Start Typing Test
+                    Preview Flags
                   </button>
                 </div>
               </div>
+              
+              {wordList.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-semibold">Preview All Flags:</h3>
+                    <button 
+                      onClick={prepareTest}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded"
+                    >
+                      Start Test
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] overflow-y-auto">
+                    {wordList.map((word, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-center p-1 rounded bg-gray-100 hover:bg-gray-200"
+                        style={{ minHeight: '42px' }}
+                      >
+                        <img 
+                          src={getFlagUrl(word)} 
+                          alt="Country flag"
+                          className="w-full object-contain border border-gray-300"
+                          style={{ maxHeight: '32px' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
