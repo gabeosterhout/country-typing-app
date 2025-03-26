@@ -363,9 +363,6 @@ const TypingTest = () => {
     // Fallback to placeholder if no flag is available
     return '/api/placeholder/60/40';
   };
-
-  return (
-    <div className="p-6 max-w-4xl mx-auto bg
     return (
    <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
      <h1 className="text-2xl font-bold mb-4 text-center">Country Flag Typing Test</h1>
