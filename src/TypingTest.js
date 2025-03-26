@@ -27,7 +27,7 @@ const TypingTest = () => {
     "newzealand", "nicaragua", "niger", "nigeria", "norway", "oman", "pakistan", 
     "palau", "palestine", "panama", "papuanewguinea", "paraguay", "peru", 
     "philippines", "poland", "portugal", "qatar", "romania", "russia", "rwanda", 
-    "stkittsnevis", "stlucia", "stvincent", "samoa", "sanmarino", "saotomeprincipe", 
+    "stkittsnevis", "stlucia", "saintvincent", "samoa", "sanmarino", "saotomeprincipe", 
     "saudiarabia", "senegal", "serbia", "seychelles", "sierraleone", "singapore", 
     "slovakia", "slovenia", "solomonislands", "somalia", "southafrica", "spain", 
     "srilanka", "southsudan", "sudan", "suriname", "swaziland", "sweden", 
@@ -100,6 +100,13 @@ const TypingTest = () => {
                 }
               });
               console.log(`Loaded ${Object.keys(urls).length} flag URLs`);
+              
+              // Check for missing flags
+              const missingFlags = allCountries.filter(country => !urls[country]);
+              if (missingFlags.length > 0) {
+                console.log("Missing flags for:", missingFlags);
+              }
+              
               setFlagUrls(urls);
               setIsLoading(false);
             },
@@ -157,6 +164,14 @@ const TypingTest = () => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    
+    // Scroll to the current flag in the grid, if possible
+    setTimeout(() => {
+      const currentFlag = document.getElementById("current-flag");
+      if (currentFlag && flagsContainerRef.current) {
+        currentFlag.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }, 100);
   };
   
   // Handle input change
@@ -348,13 +363,16 @@ const TypingTest = () => {
       return flagUrls[countryName];
     }
     
+    // Log missing flag
+    console.log(`Missing flag URL for: ${countryName}`);
+    
     // Fallback to placeholder if no flag is available
     return '/api/placeholder/60/40';
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Country Flag Typing Test</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Country Flag Typing Test</h1>
       
       {isLoading ? (
         <div className="text-center p-10">
@@ -364,8 +382,8 @@ const TypingTest = () => {
       ) : (
         <>
           {!isRunning && !testCompleted && (
-            <div className="mb-6 space-y-4">
-              <div className="border border-gray-300 rounded p-4 mb-4">
+            <div className="mb-4">
+              <div className="border border-gray-300 rounded p-4">
                 <h2 className="text-xl font-semibold mb-2">Test Settings</h2>
                 <div className="flex flex-col gap-4">
                   <p className="text-gray-700">This test includes all 197 countries with their flags.</p>
@@ -410,36 +428,11 @@ const TypingTest = () => {
           )}
           
           {isRunning && (
-            <div className="mb-6 space-y-4">
-              <div className="text-center mb-4">
-                <span className="text-lg font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
-              </div>
-              
-              <div className="text-center mb-6">
-                <img 
-                  src={getFlagUrl(wordList[currentWordIndex])} 
-                  alt="Current country flag"
-                  className="mx-auto h-40 object-contain border border-gray-300 rounded shadow-md"
-                />
-              </div>
-              
-              <div>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  className="w-full p-3 text-lg border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
-                  placeholder="Type the country name..."
-                  autoFocus
-                />
-              </div>
-              
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">All Countries:</h3>
-                <div
+            <div className="mb-4">
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div 
                   ref={flagsContainerRef}
-                  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-96 overflow-y-auto pb-20"
+                  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] w-full overflow-y-auto pb-20"
                 >
                   {wordList.map((word, index) => (
                     <div 
@@ -465,6 +458,27 @@ const TypingTest = () => {
                       )}
                     </div>
                   ))}
+                </div>
+                
+                <div className="w-full md:w-64 space-y-2 sticky top-4">
+                  <div className="text-center p-2 bg-gray-100 rounded">
+                    <span className="text-sm font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
+                  </div>
+                  
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    className="w-full py-2 px-3 text-sm border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
+                    placeholder="Type country name..."
+                    autoFocus
+                  />
+                  
+                  <div className="text-center p-2 bg-blue-50 rounded border border-blue-200">
+                    <p className="text-xs text-gray-600 font-medium">Progress: {results.length}/{wordList.length}</p>
+                    <p className="text-xs text-gray-600">Avg: {averageTime.toFixed(2)} sec/country</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -608,13 +622,6 @@ const TypingTest = () => {
               </div>
             </div>
           )}
-          
-          {results.length > 0 && !testCompleted && (
-            <div className="p-3 fixed bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200">
-              <p className="text-sm font-medium">Progress: {results.length}/{wordList.length} countries</p>
-              <p className="text-xs text-gray-600">Avg time: {averageTime.toFixed(2)} sec/country</p>
-            </div>
-          )}
         </>
       )}
     </div>
@@ -622,3 +629,4 @@ const TypingTest = () => {
 };
 
 export default TypingTest;
+    //
