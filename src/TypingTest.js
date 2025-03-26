@@ -458,19 +458,21 @@ const TypingTest = () => {
                  </div>
                  
                  <div className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50">
-                   {wordList.map((word, index) => (
-                     <div 
-                       key={index} 
-                       className="flex items-center justify-center p-1 rounded bg-gray-100 hover:bg-gray-200"
-                       style={{ minHeight: '42px' }}
-                     >
-                       <img 
-                         src={getFlagUrl(word)} 
-                         alt="Country flag"
-                         className="w-full object-contain border border-gray-300"
-                         style={{ maxHeight: '32px' }}
-                       />
-                     </div>
+  {wordList.map((word, index) => (
+    <div 
+      key={index} 
+      className="flex items-center justify-center p-1 rounded bg-gray-100 hover:bg-gray-200"
+      style={{ minHeight: '52px' }} // Increased from 42px
+    >
+      <img 
+        src={getFlagUrl(word)} 
+        alt="Country flag"
+        className="w-full object-contain border border-gray-300"
+        style={{ maxHeight: '42px' }} // Increased from 32px
+      />
+    </div>
+  ))}
+</div>
                    ))}
                  </div>
                </div>
@@ -504,35 +506,37 @@ const TypingTest = () => {
                </div>
                
                <div 
-                 className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 w-full"
-                 style={{ gridTemplateRows: 'repeat(auto-fill, minmax(60px, 1fr))' }}
-               >
-                 {wordList.map((word, index) => (
-                   <div 
-                     key={index} 
-                     className={`flex items-center justify-center p-1 rounded relative ${
-                       index === currentWordIndex 
-                         ? 'bg-blue-500 p-2 ring-2 ring-blue-700 transform scale-150 z-10' 
-                         : index < currentWordIndex 
-                           ? 'bg-green-100 opacity-50' 
-                           : 'bg-gray-100'
-                     }`}
-                     style={{ 
-                       minHeight: '42px',
-                       transformOrigin: 'center'
-                     }}
-                     id={index === currentWordIndex ? "current-flag" : ""}
-                   >
-                     <img 
-                       src={getFlagUrl(word)} 
-                       alt="Country flag"
-                       className="w-full object-contain border border-gray-300"
-                       style={{ maxHeight: index === currentWordIndex ? '48px' : '32px' }}
-                     />
-                     {index < currentWordIndex && (
-                       <span className="absolute text-green-800 text-lg font-bold">✓</span>
-                     )}
-                   </div>
+  className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 w-full"
+  style={{ gridTemplateRows: 'repeat(auto-fill, minmax(70px, 1fr))' }} // Increased from 60px to 70px
+>
+  {wordList.map((word, index) => (
+    <div 
+      key={index} 
+      className={`flex items-center justify-center p-1 rounded relative ${
+        index === currentWordIndex 
+          ? 'bg-blue-500 p-2 ring-2 ring-blue-700 z-10' // Removed transform scale-150
+          : index < currentWordIndex 
+            ? 'bg-green-100 opacity-50' 
+            : 'bg-gray-100'
+      }`}
+      style={{ 
+        minHeight: '52px', // Increased from 42px
+        transformOrigin: 'center'
+      }}
+      id={index === currentWordIndex ? "current-flag" : ""}
+    >
+      <img 
+        src={getFlagUrl(word)} 
+        alt="Country flag"
+        className="w-full object-contain border border-gray-300"
+        style={{ maxHeight: '42px' }} // Increased all flags to 42px (previously 32px for normal, 48px for selected)
+      />
+      {index < currentWordIndex && (
+        <span className="absolute text-green-800 text-lg font-bold">✓</span>
+      )}
+    </div>
+  ))}
+</div>
                  ))}
                </div>
              </div>
