@@ -1,6 +1,34 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 
+// Timer component to display total elapsed time
+const TimerDisplay = ({ startTime }) => {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    if (!startTime) return;
+    
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [startTime]);
+  
+  // Format time as mm:ss
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  return (
+    <div className="text-center p-2 bg-blue-100 rounded border border-blue-200">
+      <span className="text-sm font-bold">{formatTime(elapsedTime)}</span>
+    </div>
+  );
+};
+
 const TypingTest = () => {
   // List of all countries - exactly as in the CSV file (197 countries)
   const allCountries = [
@@ -429,7 +457,29 @@ const TypingTest = () => {
           
           {isRunning && (
             <div className="mb-4">
-              <div className="flex flex-col md:flex-row gap-4 items-start">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap justify-between items-center mb-2">
+                  <div className="w-full md:w-64 flex-shrink-0">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      className="w-full py-2 px-3 text-sm border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
+                      placeholder="Type country name..."
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center gap-4 mt-2 md:mt-0">
+                    <div className="text-center p-2 bg-gray-100 rounded">
+                      <span className="text-sm font-medium">{currentWordIndex + 1} of {wordList.length}</span>
+                    </div>
+                    
+                    <TimerDisplay startTime={startTime} />
+                  </div>
+                </div>
+                
                 <div 
                   ref={flagsContainerRef}
                   className="grid grid-cols-6 gap-3 p-4 border border-gray-200 rounded bg-gray-50 max-h-[70vh] w-full overflow-y-auto pb-20"
@@ -458,27 +508,6 @@ const TypingTest = () => {
                       )}
                     </div>
                   ))}
-                </div>
-                
-                <div className="w-full md:w-64 space-y-2 sticky top-4">
-                  <div className="text-center p-2 bg-gray-100 rounded">
-                    <span className="text-sm font-medium">Country {currentWordIndex + 1} of {wordList.length}</span>
-                  </div>
-                  
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    className="w-full py-2 px-3 text-sm border-2 border-blue-400 rounded focus:outline-none focus:border-blue-600"
-                    placeholder="Type country name..."
-                    autoFocus
-                  />
-                  
-                  <div className="text-center p-2 bg-blue-50 rounded border border-blue-200">
-                    <p className="text-xs text-gray-600 font-medium">Progress: {results.length}/{wordList.length}</p>
-                    <p className="text-xs text-gray-600">Avg: {averageTime.toFixed(2)} sec/country</p>
-                  </div>
                 </div>
               </div>
             </div>
